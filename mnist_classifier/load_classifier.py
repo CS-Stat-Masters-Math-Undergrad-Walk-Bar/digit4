@@ -18,4 +18,4 @@ class DigitClassifier(torch.nn.Module):
 
     def forward(self, x):
         x = self.transforms(x.to(self.device)).unsqueeze(0)  # Add batch dimension
-        return self.model(x)
+        return torch.nn.Sigmoid()(self.model(x))
