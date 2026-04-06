@@ -18,4 +18,4 @@ class DigitClassifier(torch.nn.Module):
 
     def forward(self, x):
         x = self.transforms(x.to(self.device)).unsqueeze(0)  # Add batch dimension
-        return torch.nn.Sigmoid()(self.model(x))
+        return 1 - torch.nn.Sigmoid()(self.model(x)) # Returns estimated probability of input being a digit.
