@@ -1,2 +1,3 @@
 mnist_classifier/data
 .conda
+.DS_Store
