@@ -292,12 +292,12 @@ def train(batch_size: int=128,
 
         torch.save(checkpoint, 'checkpoints/ddpm_class')
 
-        inference(checkpoint_path='checkpoints/ddpm_class')
+        # inference(checkpoint_path='checkpoints/ddpm_class')
         print(f'Epoch {i+1} | Loss {total_loss / (60000/batch_size):.5f}')
 
 # %%
 def main():
-    train(checkpoint_path='checkpoints/ddpm_class', lr=2e-5, num_epochs=60)
+    train(batch_size = 256, lr=2e-5, num_epochs=75)
     inference('checkpoints/ddpm_class', guidance_scale=3.0)
 
 if __name__ == '__main__':

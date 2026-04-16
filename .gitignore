@@ -2,3 +2,4 @@ mnist_classifier/data
 .conda
 .DS_Store
 diffusion/checkpoints
+diffusion/data
