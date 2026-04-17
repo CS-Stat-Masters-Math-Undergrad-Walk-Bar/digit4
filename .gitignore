@@ -2,4 +2,6 @@ mnist_classifier/data
 .conda
 .DS_Store
 __pycache__
-/docs
+docs/
+data/
+checkpoints/
