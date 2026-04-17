@@ -3,9 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def surprise(kl: torch.Tensor, lambda_s: float, a3: float) -> torch.Tensor:
+def surprise(kl: torch.Tensor, lambda_s: float, surprise_weight: float) -> torch.Tensor:
     kl_clamped = torch.clamp(kl, min=1e-8)
-    return -kl_clamped + a3 * torch.log(1 - torch.exp(-lambda_s * kl_clamped))
+    log_arg = torch.clamp(1 - torch.exp(-lambda_s * kl_clamped), min=1e-8)
+    return surprise_weight * torch.log(log_arg)
 
 
 def novelty(
@@ -15,6 +16,7 @@ def novelty(
     c2: int = 6,
     eps: float = 1e-8,
 ) -> torch.Tensor:
+    x_hat = x_hat.view(-1, 1, 28, 28)
     logits = digit_classifier(x_hat)  # (B, 10)
     probs = F.softmax(logits, dim=1)  # (B, 10)
 
@@ -38,10 +40,11 @@ def value(
     x_hat: torch.Tensor,
     digit_vs_nondigit_classifier: nn.Module,
     eps: float = 1e-8,
-    emnist_mu=float,
-    emnist_sd=float,
+    emnist_mu: float = 0.1736,
+    emnist_sd: float = 0.3317,
 ) -> torch.Tensor:
     # apply EMNIST normalization
+    x_hat = x_hat.view(-1, 1, 28, 28)
     x_norm = (x_hat - emnist_mu) / emnist_sd
 
     logits = digit_vs_nondigit_classifier(x_norm)  # (B, 1)
@@ -52,14 +55,14 @@ def value(
     return torch.log(p_digit + eps).mean()  # scalar
 
 
-def creativity_score(
+def log_creativity_score(
     x_hat: torch.Tensor,
     kl: torch.Tensor,
     digit_classifier: nn.Module,
     value_classifier: nn.Module,
-    a1: float,
-    a2: float,
-    a3: float,
+    value_weight: float,
+    novelty_weight: float,
+    surprise_weight: float,
     lambda_s: float,
     c1: int = 2,
     c2: int = 6,
@@ -67,6 +70,6 @@ def creativity_score(
 ) -> torch.Tensor:
     v = value(x_hat, value_classifier, eps)
     n = torch.log(novelty(x_hat, digit_classifier, c1, c2, eps) + eps)
-    s = surprise(kl, lambda_s, a3)
+    s = surprise(kl, lambda_s, surprise_weight)
 
-    return a1 * v + a2 * n + s
+    return value_weight * v + novelty_weight * n + s
