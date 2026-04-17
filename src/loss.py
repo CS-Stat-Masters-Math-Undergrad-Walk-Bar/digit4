@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Sequence, Literal
-from .metrics import creativity_score
+from .metrics import log_creativity_score
 
 
 def ELBO(
@@ -36,9 +36,9 @@ def creative_ELBO(
     decoder_dist: Literal["gaussian", "bernoulli"],
     digit_classifier: nn.Module,
     value_classifier: nn.Module,
-    a1: float,
-    a2: float,
-    a3: float,
+    value_weight: float,
+    novelty_weight: float,
+    surprise_weight: float,
     lambda_s: float,
     c1: int = 2,
     c2: int = 6,
@@ -54,14 +54,14 @@ def creative_ELBO(
 
     kl = -0.5 * (1 + log_var - mu**2 - torch.exp(log_var)).sum(dim=1).mean()
 
-    log_dc = creativity_score(
+    log_dc = log_creativity_score(
         x_hat,
         kl,
         digit_classifier,
         value_classifier,
-        a1,
-        a2,
-        a3,
+        value_weight,
+        novelty_weight,
+        surprise_weight,
         lambda_s,
         c1,
         c2,
@@ -77,9 +77,9 @@ def neg_creative_ELBO(
     decoder_dist: Literal["gaussian", "bernoulli"],
     digit_classifier: nn.Module,
     value_classifier: nn.Module,
-    a1: float,
-    a2: float,
-    a3: float,
+    value_weight: float,
+    novelty_weight: float,
+    surprise_weight: float,
     lambda_s: float,
     c1: int = 2,
     c2: int = 6,
@@ -91,9 +91,9 @@ def neg_creative_ELBO(
         decoder_dist,
         digit_classifier,
         value_classifier,
-        a1,
-        a2,
-        a3,
+        value_weight,
+        novelty_weight,
+        surprise_weight,
         lambda_s,
         c1,
         c2,
