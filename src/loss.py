@@ -15,9 +15,9 @@ def ELBO(
     kl = -0.5 * (1 + log_var - mu**2 - torch.exp(log_var)).sum(dim=1).mean()
 
     if decoder_dist == "bernoulli":
-        reconstruction = -F.binary_cross_entropy(x_hat, x, reduction="mean")
+        reconstruction = -F.binary_cross_entropy(x_hat, x, reduction="none").view(x_hat.shape[0], -1).sum(dim=1).mean()
     elif decoder_dist == "gaussian":
-        reconstruction = -F.mse_loss(x_hat, x, reduction="mean")
+        reconstruction = -F.mse_loss(x_hat, x, reduction="none").view(x_hat.shape[0], -1).sum(dim=1).mean()
 
     return reconstruction - kl
 
@@ -43,18 +43,20 @@ def creative_ELBO(
     c1: int = 2,
     c2: int = 6,
     eps: float = 1e-8,
+    gamma: float = 1.0, ## KL weighting term
+
 ) -> torch.Tensor:
 
     x_hat, mu, log_var = pred
 
     if decoder_dist == "bernoulli":
-        reconstruction = -F.binary_cross_entropy(x_hat, x, reduction="mean")
+        reconstruction = -F.binary_cross_entropy(x_hat, x, reduction="none").view(x_hat.shape[0], -1).sum(dim=1).mean()
     elif decoder_dist == "gaussian":
-        reconstruction = -F.mse_loss(x_hat, x, reduction="mean")
+        reconstruction = -F.mse_loss(x_hat, x, reduction="none").view(x_hat.shape[0], -1).sum(dim=1).mean()
 
-    kl = -0.5 * (1 + log_var - mu**2 - torch.exp(log_var)).sum(dim=1).mean()
+    kl = -0.5 * (1 + log_var - mu**2 - torch.exp(log_var)).sum(dim=1).mean() * gamma
 
-    log_dc = log_creativity_score(
+    v, n, s = log_creativity_score(
         x_hat,
         kl,
         digit_classifier,
@@ -68,7 +70,9 @@ def creative_ELBO(
         eps,
     )
 
-    return reconstruction + log_dc
+
+
+    return reconstruction, kl, v, n, s
 
 
 def neg_creative_ELBO(

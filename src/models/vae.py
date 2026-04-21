@@ -11,6 +11,7 @@ def he_initialization(module):
             nn.init.zeros_(module.bias)
 
 
+
 class VariationalAutoEncoder(nn.Module):
     def __init__(
         self,
@@ -19,7 +20,7 @@ class VariationalAutoEncoder(nn.Module):
         bn_dim: int,
         activation: nn.Module = nn.ReLU(),
         decoder_type: Literal["gaussian", "bernoulli"] = "gaussian",
-        initialize: bool = False,
+        initialize: bool = True,
     ):
         super().__init__()
 

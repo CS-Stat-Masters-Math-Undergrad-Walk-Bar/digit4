@@ -3,13 +3,19 @@ import torch.nn as nn
 from torchvision import datasets, transforms, models
 from torch.utils.data import DataLoader
 
-from src.loss import neg_ELBO, neg_creative_ELBO
-from src.models.vae import VariationalAutoEncoder
+import os
+from PIL import Image
+from torchvision.utils import save_image
+
+
+from src.loss import neg_creative_ELBO, neg_ELBO
+from src.models.vae import VariationalAutoEncoder # neg_ELBO, neg_creative_ELBO
+# from src.loss import neg_ELBO
 
 
 # ── Device ─────────────────────────────────────────────────────────────────
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 print(f"Using {device}")
 
 
@@ -172,6 +178,34 @@ def train(
                 loss = neg_ELBO(pred, x_flat, decoder_dist)  # always eval on ELBO
                 test_loss += loss.item()
 
+
+            # ── sample generation ───────────────────────────────────────────
+            # Get 6 samples from the test loader
+            sample_x, _ = next(iter(test_loader))
+            sample_x = sample_x[:6].to(device)
+            sample_x_flat = sample_x.view(sample_x.size(0), -1)
+            
+            # Reconstruct the samples
+            pred_sample = vae(sample_x_flat)
+            recon_x_flat = pred_sample[0]
+            
+            # Reshape back to image dimensions (assuming 28x28 for MNIST)
+            recon_x = recon_x_flat.view(6, 1, 28, 28)
+            
+            # Combine original and reconstructed images
+            # Top row: original, Bottom row: reconstructed
+            comparison = torch.cat([sample_x, recon_x])
+            
+            # Save the grid
+            sample_dir = "/u/zup7mn/Classes/NN/digit4/src/creative_vae/samples"
+            os.makedirs(sample_dir, exist_ok=True)
+            save_image(
+                comparison.cpu(), 
+                f"{sample_dir}/reconstruction_epoch_{epoch + 1}.png", 
+                nrow=6
+            )
+
+
         print(
             f"Epoch {epoch + 1}/{total_epochs} [{phase}] "
             f"train={train_loss / len(train_loader):.4f} "
@@ -179,8 +213,27 @@ def train(
         )
 
         torch.save(
-            vae.state_dict(), f"/src/creative_vae/checkpoints/vae_epoch{epoch + 1}.pth"
+            vae.state_dict(), f"src/creative_vae/checkpoints/vae_epoch{epoch + 1}.pth"
         )
+
+    # ── Create GIF from saved samples ──────────────────────────────────────────
+    print("Creating training animation GIF...")
+    sample_dir = "/u/zup7mn/Classes/NN/digit4/src/creative_vae/samples"
+    frames = []
+    for i in range(total_epochs):
+        img_path = f"{sample_dir}/reconstruction_epoch_{i + 1}.png"
+        if os.path.exists(img_path):
+            frames.append(Image.open(img_path))
+    
+    if frames:
+        frames[0].save(
+            f"{sample_dir}/training_progress.gif",
+            save_all=True,
+            append_images=frames[1:],
+            duration=200,
+            loop=0
+        )
+        print(f"Saved GIF to {sample_dir}/training_progress.gif")
 
 
 # ── Entry point ─────────────────────────────────────────────────────────────
@@ -208,15 +261,15 @@ if __name__ == "__main__":
         test_loader=test_loader,
         digit_classifier=digit_clf,
         value_classifier=value_clf,
-        warmup_epochs=20,  # train standard ELBO first
-        creative_epochs=30,  # then introduce creativity terms
+        warmup_epochs=10,  # train standard ELBO first
+        creative_epochs=60,  # then introduce creativity terms
         decoder_dist="gaussian",
         value_weight=0.33,
-        novelty_weight=0.33,
+        novelty_weight=1.00,
         surprise_weight=0.33,
         lambda_s=1.0,
         c1=2,
         c2=6,
-        lr=1e-3,
+        lr=1e-4,
         device=device,
     )
