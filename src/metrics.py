@@ -3,10 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def surprise(kl: torch.Tensor, lambda_s: float, surprise_weight: float) -> torch.Tensor:
+def surprise(kl: torch.Tensor, lambda_s: float) -> torch.Tensor:
     kl_clamped = torch.clamp(kl, min=1e-8)
     log_arg = torch.clamp(1 - torch.exp(-lambda_s * kl_clamped), min=1e-8)
-    return surprise_weight * torch.log(log_arg)
+    return torch.log(log_arg)
 
 
 def novelty(
@@ -70,6 +70,6 @@ def log_creativity_score(
 ) -> torch.Tensor:
     v = value(x_hat, value_classifier, eps)
     n = torch.log(novelty(x_hat, digit_classifier, c1, c2, eps) + eps)
-    s = surprise(kl, lambda_s, surprise_weight)
+    s = surprise(kl, lambda_s)
 
-    return value_weight * v + novelty_weight * n + s
+    return v, n, s
