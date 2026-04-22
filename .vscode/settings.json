@@ -4,5 +4,6 @@
             "approve": true,
             "matchCommandLine": true
         }
-    }
+    },
+    "python-envs.defaultPackageManager": "ms-python.python:conda"
 }
