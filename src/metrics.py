@@ -67,7 +67,7 @@ def log_creativity_score(
     c1: int = 2,
     c2: int = 6,
     eps: float = 1e-8,
-) -> torch.Tensor:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     v = value(x_hat, value_classifier, eps)
     n = torch.log(novelty(x_hat, digit_classifier, c1, c2, eps) + eps)
     s = surprise(kl, lambda_s)

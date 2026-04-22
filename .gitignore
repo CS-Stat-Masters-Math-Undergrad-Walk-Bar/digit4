@@ -6,3 +6,4 @@ docs/
 data/
 checkpoints/
 *.png
+.vscode/
