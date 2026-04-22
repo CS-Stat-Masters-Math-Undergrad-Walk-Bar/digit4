@@ -11,6 +11,7 @@ def he_initialization(module):
             nn.init.zeros_(module.bias)
 
 
+
 class VariationalAutoEncoder(nn.Module):
     def __init__(
         self,
@@ -19,7 +20,7 @@ class VariationalAutoEncoder(nn.Module):
         bn_dim: int,
         activation: nn.Module = nn.ReLU(),
         decoder_type: Literal["gaussian", "bernoulli"] = "gaussian",
-        initialize: bool = False,
+        initialize: bool = True,
     ):
         super().__init__()
 
@@ -49,8 +50,9 @@ class VariationalAutoEncoder(nn.Module):
             prev_dim = h
 
         decoder_layers.append(nn.Linear(prev_dim, real_dim))
-        if decoder_type == "bernoulli":
-            decoder_layers.append(nn.Sigmoid())
+        # if decoder_type == "bernoulli":
+        #     decoder_layers.append(nn.Sigmoid())
+        decoder_layers.append(nn.Sigmoid())
 
         self.Decoder = nn.Sequential(*decoder_layers)
 
@@ -58,10 +60,12 @@ class VariationalAutoEncoder(nn.Module):
         if initialize:
             self.apply(he_initialization)
 
-            if decoder_type == "bernoulli":
-                nn.init.xavier_uniform_(self.Decoder[-2].weight)
-                nn.init.zeros_(self.Decoder[-2].bias)
-
+            # if decoder_type == "bernoulli":
+            #     nn.init.xavier_uniform_(self.Decoder[-2].weight)
+            #     nn.init.zeros_(self.Decoder[-2].bias)
+        
+            nn.init.xavier_uniform_(self.Decoder[-2].weight)
+            nn.init.zeros_(self.Decoder[-2].bias)
     def encode(self, x: torch.Tensor):
         shared = self.Encoder(x)
         mu = self.mu_head(shared)
