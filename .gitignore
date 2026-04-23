@@ -4,9 +4,10 @@ mnist_classifier/data
 __pycache__
 docs/
 data/
-checkpoints/
+# checkpoints/
 *.png
 .vscode/
 wandb/
 .pth
 .pt
+src/creative_vae/checkpoints
