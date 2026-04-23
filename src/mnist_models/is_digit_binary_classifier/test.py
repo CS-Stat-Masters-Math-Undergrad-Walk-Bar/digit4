@@ -86,7 +86,7 @@ def print_results(name, metrics):
 
 
 models = [
-    ("CNN  (best_model.pth)",   build_cnn,    "best_model.pth"),
+    ("ResNet (best_model.pth)",  build_resnet, "best_model.pth"),
     ("ResNet (best_resnet.pth)", build_resnet, "best_resnet.pth"),
 ]
 

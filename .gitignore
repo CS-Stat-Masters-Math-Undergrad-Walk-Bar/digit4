@@ -8,5 +8,5 @@ checkpoints/
 *.png
 .vscode/
 wandb/
-*.pth
-*.pt
+.pth
+.pt
