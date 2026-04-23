@@ -11,3 +11,4 @@ wandb/
 .pth
 .pt
 src/creative_vae/checkpoints
+src/diffusion/checkpoints/ddpm_class
