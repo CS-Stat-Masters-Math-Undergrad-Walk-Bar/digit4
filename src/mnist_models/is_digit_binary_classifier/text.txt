@@ -1,0 +1,22 @@
+=== CNN        (best_cnn.pth) ===
+  Accuracy:  0.8822
+  Precision: 0.8616
+  Recall:    0.9095
+  F1:        0.8849
+  Confusion matrix (rows=true, cols=pred):
+                pred=not-digit  pred=digit
+  true=not-digit       49944          8461
+  true=digit            5244         52674
+
+Loading best_resnet.pth ...
+=== ResNet-18  (best_resnet.pth) ===
+  Accuracy:  0.8420
+  Precision: 0.8236
+  Recall:    0.8688
+  F1:        0.8456
+  Confusion matrix (rows=true, cols=pred):
+                pred=not-digit  pred=digit
+  true=not-digit       47625         10780
+  true=digit            7597         50321
+
+Winner: CNN        (best_cnn.pth)  (accuracy 0.8822)

@@ -1,10 +1,12 @@
 # %%
+from pathlib import Path
 import torchvision
 import torchvision.transforms as transforms
 import torch
 import torch.nn as nn
 from torchvision.transforms import v2
 
+HERE = Path(__file__).resolve().parent
 DATA_ROOT = "/u/zup7mn/Classes/NN/digit4/src/data"
 BATCH_SIZE = 256
 
@@ -98,7 +100,7 @@ def train(epochs=10, use_mixup=True, device=None):
 
         torch.save(
             model.state_dict(),
-            "mnist_mixup_classifier.pth" if use_mixup else "mnist_classifier.pth",
+            HERE / ("mnist_mixup_classifier.pth" if use_mixup else "mnist_classifier.pth"),
         )
 
     return model, test_loader

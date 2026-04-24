@@ -12,3 +12,5 @@ wandb/
 .pt
 src/creative_vae/checkpoints
 src/diffusion/checkpoints/ddpm_class
+digit4.code-workspace
+.claude/.nfs000000003e7962f00000060a

@@ -1,8 +1,11 @@
 # %%
+from pathlib import Path
 import torch
 import torchvision
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+
+HERE = Path(__file__).resolve().parent
 
 # %%
 device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
@@ -87,14 +90,14 @@ for epoch in range(EPOCHS):
 
     if test_loss_epoch / len(test_loader) < smallest_test_loss:
         smallest_test_loss = test_loss_epoch / len(test_loader)
-        torch.save(model.state_dict(), 'best_resnet.pth')
-    torch.save(model.state_dict(), 'last_resnet.pth')
+        torch.save(model.state_dict(), HERE / 'best_resnet.pth')
+    torch.save(model.state_dict(), HERE / 'last_resnet.pth')
 
     print(f"Test Loss: {test_loss_epoch / len(test_loader)}")
 
 
 # %%
-torch.save(model.state_dict(), 'last_resnet.pth')
+torch.save(model.state_dict(), HERE / 'last_resnet.pth')
 
 # %%
 import os
@@ -105,7 +108,7 @@ os.getcwd()
 
 import numpy as np
 
-model.load_state_dict(torch.load('best_resnet.pth'))
+model.load_state_dict(torch.load(HERE / 'best_resnet.pth'))
 model.eval()
 all_probs = []
 all_labels = []

@@ -5,6 +5,7 @@ from pathlib import Path
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 HERE = Path(__file__).parent
+REPO_ROOT = HERE.parent.parent.parent
 DATA_ROOT = "/u/zup7mn/Classes/NN/digit4/src/data"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -93,16 +94,16 @@ def print_results(name, metrics):
 
 
 models = [
-    ("ResNet-18  (best_model.pth)",  build_resnet, "best_model.pth"),
-    ("ResNet-18  (best_resnet.pth)", build_resnet, "best_resnet.pth"),
+    ("CNN        (best_cnn.pth)",    build_cnn,    REPO_ROOT / "best_cnn.pth"),
+    ("ResNet-18  (best_resnet.pth)", build_resnet, REPO_ROOT / "best_resnet.pth"),
 ]
 
 results = {}
-for name, build_fn, weights_file in models:
-    print(f"Loading {weights_file} ...")
+for name, build_fn, weights_path in models:
+    print(f"Loading {weights_path.name} ...")
     model = build_fn()
     model.load_state_dict(
-        torch.load(HERE / weights_file, map_location=device, weights_only=True)
+        torch.load(weights_path, map_location=device, weights_only=True)
     )
     metrics = evaluate(model, test_loader)
     results[name] = metrics

@@ -16,10 +16,19 @@ import matplotlib.pyplot as plt #pip install matplotlib
 import torch.optim as optim
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-_CKPT_DIR = HERE / 'checkpoints'
+# %%
+# Paths — resolved from this file's location so the script works when launched
+# as `python -m src.diffusion.emnist_cls_diff` from the repo root (or anywhere).
+_THIS_DIR = Path(__file__).resolve().parent
+_DATA_DIR = _THIS_DIR.parent / 'data'          # src/data (contains EMNIST/)
+_CKPT_DIR = _THIS_DIR / 'checkpoints'          # src/diffusion/checkpoints
 _CKPT_DIR.mkdir(parents=True, exist_ok=True)
-CHECKPOINT_PATH = str(_CKPT_DIR / 'ddpm_checkpoint')
+CHECKPOINT_PATH = str(_CKPT_DIR / 'ddpm_class_emnist_digits.pt')
+
+# EMNIST 'digits' split: 10 balanced classes (0-9), ~240k train / 40k test.
+EMNIST_SPLIT = 'digits'
+NUM_CLASSES = 10
+NULL_CLASS = NUM_CLASSES  # index 10 = unconditional
 
 class SinusoidalEmbeddings(nn.Module):
     def __init__(self, time_steps:int, embed_dim: int):
@@ -76,10 +85,10 @@ class Attention(nn.Module):
 
 # %%
 class UnetLayer(nn.Module):
-    def __init__(self, 
-            upscale: bool, 
-            attention: bool, 
-            num_groups: int, 
+    def __init__(self,
+            upscale: bool,
+            attention: bool,
+            num_groups: int,
             dropout_prob: float,
             num_heads: int,
             C: int):
@@ -111,7 +120,8 @@ class UNET(nn.Module):
             num_heads: int = 8,
             input_channels: int = 1,
             output_channels: int = 1,
-            time_steps: int = 1000):
+            time_steps: int = 1000,
+            num_classes: int = NUM_CLASSES):
         super().__init__()
         self.num_layers = len(Channels)
         self.shallow_conv = nn.Conv2d(input_channels, Channels[0], kernel_size=3, padding=1)
@@ -120,6 +130,8 @@ class UNET(nn.Module):
         self.output_conv = nn.Conv2d(out_channels//2, output_channels, kernel_size=1)
         self.relu = nn.ReLU(inplace=True)
         self.embeddings = SinusoidalEmbeddings(time_steps=time_steps, embed_dim=max(Channels))
+        # Class conditioning: num_classes + 1 null class for unconditional
+        self.class_embedding = nn.Embedding(num_classes + 1, max(Channels))
         for i in range(self.num_layers):
             layer = UnetLayer(
                 upscale=Upscales[i],
@@ -131,12 +143,16 @@ class UNET(nn.Module):
             )
             setattr(self, f'Layer{i+1}', layer)
 
-    def forward(self, x, t):
+    def forward(self, x, t, class_labels):
         x = self.shallow_conv(x)
+        # Combined time + class embedding computed once
+        time_emb = self.embeddings(x, t)
+        class_emb = self.class_embedding(class_labels)[:, :, None, None]
+        embeddings = time_emb + class_emb
+
         residuals = []
         for i in range(self.num_layers//2):
             layer = getattr(self, f'Layer{i+1}')
-            embeddings = self.embeddings(x, t)
             x, r = layer(x, embeddings)
             residuals.append(r)
         for i in range(self.num_layers//2, self.num_layers):
@@ -165,23 +181,33 @@ def set_seed(seed: int = 42):
     random.seed(seed)
 
 # %%
-def display_reverse(images: List):
-    fig, axes = plt.subplots(1, 10, figsize=(20,2))
-    for i, ax in enumerate(axes.flat):
-        x = images[i].squeeze(0)
-        x = rearrange(x, 'c h w -> h w c')
-        x = x.numpy()
-        ax.imshow(x)
-        ax.axis('off')
-    plt.show()
+# EMNIST images are stored transposed relative to MNIST; flip H/W so they look upright.
+_EMNIST_TRANSFORM = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Lambda(lambda x: torch.transpose(x, 1, 2)),
+    transforms.RandomAffine(
+        degrees=15,
+        translate=(0.1, 0.1),
+        scale=(0.9, 1.1),
+    )
+])
 
-def inference(checkpoint_path: str=None,
+def _gpu_config():
+    """Primary device + all visible GPU ids for DataParallel."""
+    n = torch.cuda.device_count()
+    if n == 0:
+        return torch.device('cpu'), None
+    gpu_ids = list(range(n))
+    return torch.device(f'cuda:{gpu_ids[0]}'), gpu_ids
+
+# %%
+def inference(checkpoint_path: str=CHECKPOINT_PATH,
               num_time_steps: int=1000,
               ema_decay: float=0.9999,
-              num_images: int=10):
-    device = torch.device('cuda:1')
+              guidance_scale: float=3.0):
+    device, _ = _gpu_config()
     checkpoint = torch.load(checkpoint_path, map_location=device)
-    model = UNET().to(device)
+    model = UNET(num_classes=NUM_CLASSES).to(device)
     model.load_state_dict(checkpoint['weights'])
     ema = ModelEmaV3(model, decay=ema_decay)
     # Strip extra 'module.' prefix caused by saving EMA of a DataParallel-wrapped model
@@ -189,70 +215,107 @@ def inference(checkpoint_path: str=None,
     ema_state = {k.replace('module.module.', 'module.'): v for k, v in ema_state.items()}
     ema.load_state_dict(ema_state)
     scheduler = DDPM_Scheduler(num_time_steps=num_time_steps)
-    # Move scheduler tensors to GPU once
     beta = scheduler.beta.to(device)
     alpha = scheduler.alpha.to(device)
-    times = [0,15,50,100,200,300,400,550,700,999]
+
+    # Generate one image per class (digits 0-9)
+    classes = torch.arange(NUM_CLASSES, device=device)
+    null_classes = torch.full((NUM_CLASSES,), NULL_CLASS, device=device, dtype=torch.long)
 
     with torch.no_grad():
         model = ema.module.eval()
-        # Batch all images together
-        z = torch.randn(num_images, 1, 32, 32, device=device)
+        z = torch.randn(NUM_CLASSES, 1, 32, 32, device=device)
+
         for t in reversed(range(1, num_time_steps)):
-            t_tensor = torch.full((num_images,), t, device=device)
+            t_tensor = torch.full((NUM_CLASSES,), t, device=device)
+
+            # Classifier-free guidance: batch conditional + unconditional together
+            z_double = torch.cat([z, z], dim=0)
+            t_double = torch.cat([t_tensor, t_tensor], dim=0)
+            c_double = torch.cat([classes, null_classes], dim=0)
+
+            eps_combined = model(z_double, t_double, c_double)
+            eps_cond, eps_uncond = eps_combined.chunk(2, dim=0)
+            eps = eps_uncond + guidance_scale * (eps_cond - eps_uncond)
+
             temp = beta[t] / (torch.sqrt(1 - alpha[t]) * torch.sqrt(1 - beta[t]))
-            z = (1 / torch.sqrt(1 - beta[t])) * z - temp * model(z, t_tensor)
+            z = (1 / torch.sqrt(1 - beta[t])) * z - temp * eps
             e = torch.randn_like(z)
             z = z + e * torch.sqrt(beta[t])
-        # Final step (t=0, no noise added)
-        temp = beta[0] / (torch.sqrt(1 - alpha[0]) * torch.sqrt(1 - beta[0]))
-        x = (1 / torch.sqrt(1 - beta[0])) * z - temp * model(z, torch.zeros(num_images, dtype=torch.long, device=device))
 
-        # Display each image
-        for i in range(num_images):
-            img = x[i:i+1].cpu()
-            img_np = rearrange(img.squeeze(0), 'c h w -> h w c').numpy()
-            plt.imshow(img_np)
-            plt.axis('off')
-            plt.show()
+        # Final step (t=0, no noise added)
+        t_tensor = torch.zeros(NUM_CLASSES, dtype=torch.long, device=device)
+        z_double = torch.cat([z, z], dim=0)
+        t_double = torch.cat([t_tensor, t_tensor], dim=0)
+        c_double = torch.cat([classes, null_classes], dim=0)
+        eps_combined = model(z_double, t_double, c_double)
+        eps_cond, eps_uncond = eps_combined.chunk(2, dim=0)
+        eps = eps_uncond + guidance_scale * (eps_cond - eps_uncond)
+
+        temp = beta[0] / (torch.sqrt(1 - alpha[0]) * torch.sqrt(1 - beta[0]))
+        x = (1 / torch.sqrt(1 - beta[0])) * z - temp * eps
+
+        fig, axes = plt.subplots(1, NUM_CLASSES, figsize=(20, 2))
+        for i, ax in enumerate(axes.flat):
+            img = x[i].cpu().squeeze(0).numpy()
+            ax.imshow(img, cmap='gray')
+            ax.set_title(str(i))
+            ax.axis('off')
+        plt.suptitle(f'EMNIST-{EMNIST_SPLIT} CFG w={guidance_scale}')
+        plt.show()
 
 def train(batch_size: int=128,
           num_time_steps: int=1000,
           num_epochs: int=15,
           seed: int=-1,
-          ema_decay: float=0.9999,  
+          ema_decay: float=0.9999,
           lr=2e-5,
-          checkpoint_path: str=None):
+          checkpoint_path: str=None,
+          p_uncond: float=0.1):
     set_seed(random.randint(0, 2**32-1)) if seed == -1 else set_seed(seed)
 
-    device = torch.device('cuda:1')
-    gpu_ids = [1, 2, 3]
+    device, gpu_ids = _gpu_config()
 
-    train_dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transforms.ToTensor())
+    train_dataset = datasets.EMNIST(
+        root=str(_DATA_DIR),
+        split=EMNIST_SPLIT,
+        train=True,
+        download=True,
+        transform=_EMNIST_TRANSFORM,
+    )
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=4)
 
     scheduler = DDPM_Scheduler(num_time_steps=num_time_steps)
-    model = UNET().to(device)
-    model = nn.DataParallel(model, device_ids=gpu_ids, output_device=device)
+    model = UNET(num_classes=NUM_CLASSES).to(device)
+    if gpu_ids is not None and len(gpu_ids) > 1:
+        model = nn.DataParallel(model, device_ids=gpu_ids, output_device=device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     ema = ModelEmaV3(model, decay=ema_decay)
     if checkpoint_path is not None:
         checkpoint = torch.load(checkpoint_path, map_location=device)
-        model.module.load_state_dict(checkpoint['weights'])
+        base = model.module if isinstance(model, nn.DataParallel) else model
+        base.load_state_dict(checkpoint['weights'])
         ema.load_state_dict(checkpoint['ema'])
         optimizer.load_state_dict(checkpoint['optimizer'])
     criterion = nn.MSELoss(reduction='mean')
 
+    dataset_size = len(train_dataset)
     for i in range(num_epochs):
         total_loss = 0
-        for bidx, (x,_) in enumerate(tqdm(train_loader, desc=f"Epoch {i+1}/{num_epochs}")):
+        for bidx, (x, y) in enumerate(tqdm(train_loader, desc=f"Epoch {i+1}/{num_epochs}")):
             x = x.to(device)
+            y = y.to(device)
             x = F.pad(x, (2,2,2,2))
+
+            # Randomly drop class labels for classifier-free guidance
+            drop_mask = torch.rand(batch_size, device=device) < p_uncond
+            y = torch.where(drop_mask, torch.full_like(y, NULL_CLASS), y)
+
             t = torch.randint(0,num_time_steps,(batch_size,))
             e = torch.randn_like(x, requires_grad=False)
             a = scheduler.alpha[t].view(batch_size,1,1,1).to(device)
             x = (torch.sqrt(a)*x) + (torch.sqrt(1-a)*e)
-            output = model(x, t)
+            output = model(x, t, y)
             optimizer.zero_grad()
             loss = criterion(output, e)
             total_loss += loss.item()
@@ -260,30 +323,20 @@ def train(batch_size: int=128,
             optimizer.step()
             ema.update(model)
 
-
+        base = model.module if isinstance(model, nn.DataParallel) else model
         checkpoint = {
-        'weights': model.module.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'ema': ema.state_dict()
+            'weights': base.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'ema': ema.state_dict()
         }
-        
         torch.save(checkpoint, CHECKPOINT_PATH)
-        
-        inference(checkpoint_path=CHECKPOINT_PATH)
-        print(f'Epoch {i+1} | Loss {total_loss / (60000/batch_size):.5f}')
+
+        print(f'Epoch {i+1} | Loss {total_loss / (dataset_size/batch_size):.5f}')
 
 # %%
 def main():
-    train(checkpoint_path=CHECKPOINT_PATH, lr=2e-5, num_epochs=60)
-    inference(CHECKPOINT_PATH)
+    train(batch_size=512, lr=2e-5, num_epochs=100)
+    inference(CHECKPOINT_PATH, guidance_scale=3.0)
 
 if __name__ == '__main__':
     main()
-
-# %%
-inference(CHECKPOINT_PATH)
-
-# %%
-
-
-

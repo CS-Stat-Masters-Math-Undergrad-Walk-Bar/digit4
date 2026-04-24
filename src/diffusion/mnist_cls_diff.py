@@ -1,5 +1,6 @@
 # %%
 # Imports
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,12 +9,17 @@ from typing import List
 import random
 import math
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader 
-from timm.utils import ModelEmaV3 #pip install timm 
+from torch.utils.data import DataLoader
+from timm.utils import ModelEmaV3 #pip install timm
 from tqdm import tqdm #pip install tqdm
 import matplotlib.pyplot as plt #pip install matplotlib
 import torch.optim as optim
 import numpy as np
+
+HERE = Path(__file__).resolve().parent
+_CKPT_DIR = HERE / 'checkpoints'
+_CKPT_DIR.mkdir(parents=True, exist_ok=True)
+CHECKPOINT_PATH = str(_CKPT_DIR / 'ddpm_class')
 
 class SinusoidalEmbeddings(nn.Module):
     def __init__(self, time_steps:int, embed_dim: int):
@@ -290,15 +296,15 @@ def train(batch_size: int=128,
         'ema': ema.state_dict()
         }
 
-        torch.save(checkpoint, 'checkpoints/ddpm_class')
+        torch.save(checkpoint, CHECKPOINT_PATH)
 
-        # inference(checkpoint_path='checkpoints/ddpm_class')
+        # inference(checkpoint_path=CHECKPOINT_PATH)
         print(f'Epoch {i+1} | Loss {total_loss / (60000/batch_size):.5f}')
 
 # %%
 def main():
     train(batch_size = 256, lr=2e-5, num_epochs=75)
-    inference('checkpoints/ddpm_class', guidance_scale=3.0)
+    inference(CHECKPOINT_PATH, guidance_scale=3.0)
 
 if __name__ == '__main__':
     main()
