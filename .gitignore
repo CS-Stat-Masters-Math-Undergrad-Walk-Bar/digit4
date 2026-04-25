@@ -4,9 +4,14 @@ mnist_classifier/data
 __pycache__
 docs/
 data/
-checkpoints/
+# checkpoints/
 *.png
 .vscode/
 wandb/
 .pth
 .pt
+src/creative_vae/checkpoints
+src/diffusion/checkpoints/ddpm_class
+digit4.code-workspace
+.claude/.nfs000000003e7962f00000060a
+src/diffusion/checkpoints/ddpm_class_emnist_digits.pt
