@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(jupyter nbconvert *)",
+      "Bash(python src/mnist_models/is_digit_binary_classifier/eval.py)",
+      "Bash(python -c ' *)",
+      "Bash(git mv *)",
+      "Bash(nvidia-smi --query-gpu=index,memory.free --format=csv)",
+      "Bash(conda env *)",
+      "Bash(/u/zup7mn/miniconda3/bin/python -c \"import torch, torchvision, timm; print\\(torch.__version__, torchvision.__version__, timm.__version__\\)\")"
+    ]
+  }
+}
