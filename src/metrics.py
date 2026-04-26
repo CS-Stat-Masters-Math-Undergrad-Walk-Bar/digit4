@@ -21,26 +21,16 @@ def novelty(
     c1: int = 2,
     c2: int = 6,
     eps: float = 1e-8,
+    ambiguity_weight: float = 0.7,
+    relevance_weight: float = 0.3,
 ) -> torch.Tensor:
-    """
-    N(x) = ambiguity(x) * relevance(x)
 
-    Ambiguity: binary entropy of renormalized P(c1|x) and P(c2|x).
-               Maximized exactly when P(c1|x) = P(c2|x) — the decision boundary.
-
-    Relevance: P(c1|x) + P(c2|x). Penalizes images like digit 8 or noise that
-               confuse the binary classifier for the wrong reason.
-
-    The 10-class classifier is required — a binary c1-vs-c2 classifier cannot
-    distinguish genuine class-boundary ambiguity from out-of-distribution confusion.
-    """
     x_hat = x_hat.view(-1, 1, 28, 28)
     probs = F.softmax(digit_classifier(x_hat), dim=1)  # (B, 10)
 
-    p_c1 = probs[:, c1]  # (B,)
-    p_c2 = probs[:, c2]  # (B,)
-
-    relevance = p_c1 + p_c2  # (B,) — total mass on target classes
+    p_c1 = probs[:, c1]                                # (B,)
+    p_c2 = probs[:, c2]                                # (B,)
+    relevance = p_c1 + p_c2                            # (B,)
 
     # renormalize over {c1, c2} to isolate ambiguity between them
     p_tilde_c1 = p_c1 / (relevance + eps)
@@ -52,7 +42,10 @@ def novelty(
         + p_tilde_c2 * torch.log(p_tilde_c2 + eps)
     ) / torch.log(torch.tensor(2.0, device=x_hat.device))  # (B,)
 
-    return (h * relevance).mean()  # scalar in [0, 1]
+    # geometric mean — non-compensatory, ambiguity-weighted
+    n = h ** ambiguity_weight * relevance ** relevance_weight
+
+    return n.mean()  # scalar in [0, 1]
 
 
 def value(
