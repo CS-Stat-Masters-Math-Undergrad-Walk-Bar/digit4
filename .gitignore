@@ -13,7 +13,7 @@ wandb/
 src/creative_vae/checkpoints
 src/diffusion/checkpoints/ddpm_class
 digit4.code-workspace
-.claude/.nfs000000003e7962f00000060a
 src/diffusion/checkpoints/ddpm_class_emnist_digits.pt
 src/diffusion/v2_score/DeepCreativityScore.ipynb
 evaluation_presentation/compare_methods.ipynb
+.claude/
