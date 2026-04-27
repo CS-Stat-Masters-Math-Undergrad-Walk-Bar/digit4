@@ -8,7 +8,7 @@ from timm.utils.model_ema import ModelEmaV3
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 from src.diffusion.mnist_cls_diff import UNET, DDPM_Scheduler, NUM_CLASSES, NULL_CLASS
 
-CLASSIFIER_PATH = "/u/zup7mn/Classes/NN/digit4/src/diffusion/checkpoints/mnist_mixup_classifier.pth"
+CLASSIFIER_PATH = "/u/zup7mn/Classes/NN/digit4/state/diffusion/checkpoints/mnist_mixup_classifier.pth"
 CKPT_PATH = os.path.join(os.path.dirname(__file__), '..', 'checkpoints', 'ddpm_class')
 OUT_DIR = os.path.dirname(__file__)
 

@@ -5,6 +5,9 @@ from pathlib import Path
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 HERE = Path(__file__).parent
+# Find the index of the last /src/ chunk.
+src_ind = len(HERE.parts) - (HERE.parts[::-1].index('src') + 1)
+HERE_STATE = Path(*HERE.parts[:src_ind]).joinpath('state', *HERE.parts[src_ind + 1:])
 DATA_ROOT = "/u/zup7mn/Classes/NN/digit4/src/data"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -86,11 +89,12 @@ def print_results(name, metrics):
 
 
 models = [
+    # It seems this one no longer exists?
     ("ResNet (best_model.pth)",  build_resnet, "best_model.pth"),
     ("ResNet (best_resnet.pth)", build_resnet, "best_resnet.pth"),
 ]
 
 for name, build_fn, weights_path in models:
     model = build_fn()
-    model.load_state_dict(torch.load(HERE / weights_path, map_location=device, weights_only=True))
+    model.load_state_dict(torch.load(HERE_STATE / weights_path, map_location=device, weights_only=True))
     print_results(name, evaluate(model, test_loader))

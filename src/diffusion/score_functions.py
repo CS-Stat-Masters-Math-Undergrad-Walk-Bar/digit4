@@ -18,7 +18,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 #     nn.Linear(3136, 1),
 #     nn.Sigmoid()
 # ).to(device)
-# discriminator.load_state_dict(torch.load('/u/zup7mn/Classes/NN/digit4/src/models/discriminator_last.pth'))
+# discriminator.load_state_dict(torch.load('/u/zup7mn/Classes/NN/digit4/state/models/discriminator_last.pth'))
 # discriminator.eval()
 
 digit_classifier = nn.Sequential(
@@ -35,7 +35,7 @@ digit_classifier = nn.Sequential(
 
 
 ### Load classifier
-CLASSIFIER_PATH = "/u/zup7mn/Classes/NN/digit4/src/mnist_classifier/mnist_mixup_classifier.pth"
+CLASSIFIER_PATH = "/u/zup7mn/Classes/NN/digit4/state/mnist_models/digit_classifier/mnist_mixup_classifier.pth"
 digit_classifier.load_state_dict(torch.load(CLASSIFIER_PATH, map_location=device))
 digit_classifier.eval()
 

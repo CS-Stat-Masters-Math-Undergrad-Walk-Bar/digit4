@@ -247,7 +247,7 @@ def train(
         )
 
         torch.save(
-            vae.state_dict(), f"src/creative_vae/checkpoints/vae_epoch{epoch + 1}.pth"
+            vae.state_dict(), f"state/creative_vae/checkpoints/vae_epoch{epoch + 1}.pth"
         )
 
     # ── Create GIF from saved samples ──────────────────────────────────────────
@@ -279,8 +279,9 @@ if __name__ == "__main__":
     os.makedirs("checkpoints", exist_ok=True)
 
     digit_clf, value_clf = load_classifiers(
+        # I can find no other reference to this, nor do I have any clue whence it came.
         value_path="src/mnist_classifier/best_model.pth",
-        digit_path="src/mnist_classifier/mnist_mixup_classifier.pth",
+        digit_path="state/mnist_models/digit_classifier/mnist_mixup_classifier.pth",
         device=device,
     )
 

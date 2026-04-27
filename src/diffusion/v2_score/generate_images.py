@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 import sys
 import os
+from pathlib import Path
 from timm.utils.model_ema import ModelEmaV3
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.diffusion.mnist_cls_diff import UNET, DDPM_Scheduler, NUM_CLASSES, NULL_CLASS
 
-CLASSIFIER_PATH = "/u/zup7mn/Classes/NN/digit4/src/diffusion/checkpoints/mnist_mixup_classifier.pth"
+CLASSIFIER_PATH = "/u/zup7mn/Classes/NN/digit4/state/diffusion/checkpoints/mnist_mixup_classifier.pth"
 
 
 def build_classifier(device):
@@ -94,8 +95,13 @@ if __name__ == '__main__':
     device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    ckpt_path = os.path.join(os.path.dirname(__file__), '..', 'checkpoints', 'ddpm_class')
-    out_dir   = os.path.dirname(__file__)
+    HERE = Path(__file__).resolve().parent
+    # Find the index of the last /src/ chunk.
+    src_ind = len(HERE.parts) - (HERE.parts[::-1].index('src') + 1)
+    HERE_STATE = Path(*HERE.parts[:src_ind]).joinpath('state', *HERE.parts[src_ind + 1:])
+
+    ckpt_path = os.path.join(HERE_STATE, '..', 'checkpoints', 'ddpm_class')
+    out_dir = HERE_STATE
 
     checkpoint = torch.load(ckpt_path, map_location=device)
     model = UNET(num_classes=NUM_CLASSES).to(device)
@@ -120,8 +126,8 @@ if __name__ == '__main__':
     for n in [8, 4, 2]:
         print(f"\n=== swap_every_n={n} ===")
         images, scores = generate(model, classifier, beta, alpha, swap_every_n=n, device=device)
-        images_path = os.path.join(out_dir, f'generated_swap_N{n}.pt')
-        scores_path = os.path.join(out_dir, f'scores_swap_N{n}.pt')
+        images_path = out_dir / f'generated_swap_N{n}.pt'
+        scores_path = out_dir / f'scores_swap_N{n}.pt'
         torch.save(images, images_path)
         torch.save(scores, scores_path)
         print(f"Saved {tuple(images.shape)} to {images_path}")

@@ -13,7 +13,11 @@ import glob
 import os
 from pathlib import Path
 
-HERE = Path(__file__).parent
+HERE = Path(__file__).resolve().parent
+# Find the index of the last /src/ chunk.
+src_ind = len(HERE.parts) - (HERE.parts[::-1].index('src') + 1)
+HERE_STATE = Path(*HERE.parts[:src_ind]).joinpath('state', *HERE.parts[src_ind + 1:])
+
 
 # %%
 
@@ -112,8 +116,8 @@ for epoch in trange(EPOCHS, desc="Epochs"):
         g_loss.backward()
         opt_G.step()
 
-    torch.save(generator.state_dict(), HERE / "checkpoints/generators/generator_last.pth")
-    torch.save(discriminator.state_dict(), HERE / "checkpoints/discriminators/discriminator_last.pth")
+    torch.save(generator.state_dict(), HERE_STATE / "checkpoints/generators/generator_last.pth")
+    torch.save(discriminator.state_dict(), HERE_STATE / "checkpoints/discriminators/discriminator_last.pth")
 
     print(f"Epoch {epoch + 1} | D Loss: {d_loss_total.item()} | G Loss: {g_loss.item()}")
     with torch.no_grad():

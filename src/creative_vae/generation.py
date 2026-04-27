@@ -188,7 +188,7 @@ digit_clf = build_digit_classifier().to(device)
 try:
     digit_clf.load_state_dict(
         torch.load(
-            "/u/zup7mn/Classes/NN/digit4/src/mnist_classifier/mnist_mixup_classifier.pth",
+            "/u/zup7mn/Classes/NN/digit4/state/mnist_models/digit_classifier/mnist_mixup_classifier.pth",
             map_location=device,
         )
     )

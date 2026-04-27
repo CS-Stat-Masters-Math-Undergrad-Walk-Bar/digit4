@@ -94,8 +94,8 @@ def print_results(name, metrics):
 
 
 models = [
-    ("CNN        (best_cnn.pth)",    build_cnn,    REPO_ROOT / "best_cnn.pth"),
-    ("ResNet-18  (best_resnet.pth)", build_resnet, REPO_ROOT / "best_resnet.pth"),
+    ("CNN        (best_cnn.pth)",    build_cnn,    REPO_ROOT / "state/best_cnn.pth"),
+    ("ResNet-18  (best_resnet.pth)", build_resnet, REPO_ROOT / "state/best_resnet.pth"),
 ]
 
 results = {}

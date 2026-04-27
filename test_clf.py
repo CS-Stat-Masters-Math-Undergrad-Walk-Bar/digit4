@@ -14,6 +14,6 @@ classifier = nn.Sequential(
     nn.Softmax(dim=1)
 )
 
-state_dict = torch.load("/u/zup7mn/Classes/NN/digit4/src/mnist_classifier/mnist_mixup_classifier.pth", map_location=device)
+state_dict = torch.load("/u/zup7mn/Classes/NN/digit4/state/mnist_models/digit_classifier/mnist_mixup_classifier.pth", map_location=device)
 classifier.load_state_dict(state_dict)
 print("Loaded successfully!")

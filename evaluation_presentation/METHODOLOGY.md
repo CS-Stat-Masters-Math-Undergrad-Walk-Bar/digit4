@@ -18,9 +18,9 @@ with all weights set to 1. The three components:
 
 | Component | Definition | Scoring model |
 |---|---|---|
-| `V(x)` — value | "Does this look like a real digit?" | GAN discriminator (`use_discriminator=True`) — `src/GAN/checkpoints/discriminators/discriminator_last.pth` |
-| `N(x)` — novelty | Binary entropy of `P(2|x)` vs `P(6|x)` (renormalized over the two), times relevance `P(2|x) + P(6|x)`. Maximized at the 2/6 decision boundary. | EMNIST 10-class classifier — `src/mnist_models/digit_classifier/emnist_mixup_classifier.pth` |
-| `S(x)` — surprise | `1 − exp(−λ·KL(q(z|x) ‖ N(0, I)))` from the basic mnist VAE encoder. Penalizes near-mode-collapse images. | VAE encoder — `full_VAE.pth` |
+| `V(x)` — value | "Does this look like a real digit?" | GAN discriminator (`use_discriminator=True`) — `state/GAN/checkpoints/discriminators/discriminator_last.pth` |
+| `N(x)` — novelty | Binary entropy of `P(2|x)` vs `P(6|x)` (renormalized over the two), times relevance `P(2|x) + P(6|x)`. Maximized at the 2/6 decision boundary. | EMNIST 10-class classifier — `state/mnist_models/digit_classifier/emnist_mixup_classifier.pth` |
+| `S(x)` — surprise | `1 − exp(−λ·KL(q(z|x) ‖ N(0, I)))` from the basic mnist VAE encoder. Penalizes near-mode-collapse images. | VAE encoder — `state/full_VAE.pth` |
 
 We use the **discriminator-based value** (the alternative is a separate
 EMNIST-trained binary "is_digit" CNN; both ship with the scorer). Discriminator
