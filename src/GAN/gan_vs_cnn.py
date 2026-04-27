@@ -22,6 +22,10 @@ from torchvision import transforms
 from timm.utils import ModelEmaV3
 
 HERE = Path(__file__).resolve().parent
+# Find the index of the last /src/ chunk.
+src_ind = len(HERE.parts) - (HERE.parts[::-1].index('src') + 1)
+HERE_STATE = Path(*HERE.parts[:src_ind]).joinpath('state', *HERE.parts[src_ind + 1:])
+
 SRC = HERE.parent
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
@@ -30,8 +34,8 @@ from diffusion.mnist_cls_diff import UNET, DDPM_Scheduler, NUM_CLASSES, NULL_CLA
 
 # %%
 CNN_CKPT = SRC / "mnist_models/is_digit_binary_classifier/cnn/best_cnn.pth"
-DISC_CKPT = HERE / "checkpoints/discriminators/discriminator_last.pth"
-GEN_CKPT = HERE / "checkpoints/generators/generator_last.pth"
+DISC_CKPT = HERE_STATE / "checkpoints/discriminators/discriminator_last.pth"
+GEN_CKPT = HERE_STATE / "checkpoints/generators/generator_last.pth"
 DIFF_CKPT = SRC / "diffusion/checkpoints/ddpm_class"
 
 DEVICE = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")

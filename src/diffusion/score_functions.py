@@ -18,7 +18,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 #     nn.Linear(3136, 1),
 #     nn.Sigmoid()
 # ).to(device)
-# discriminator.load_state_dict(torch.load('/u/zup7mn/Classes/NN/digit4/src/models/discriminator_last.pth'))
+# discriminator.load_state_dict(torch.load('/u/zup7mn/Classes/NN/digit4/state/GAN/checkpoints/discriminators/discriminator_last.pth'))
 # discriminator.eval()
 
 digit_classifier = nn.Sequential(
