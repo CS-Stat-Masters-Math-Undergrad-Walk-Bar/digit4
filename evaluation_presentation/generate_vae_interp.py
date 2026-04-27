@@ -19,7 +19,7 @@ HERE = Path(__file__).resolve().parent
 N_SAMPLES = 10000
 BATCH_SIZE = 500
 DATA_ROOT = str(ROOT / 'src/data')
-VAE_PATH  = ROOT / 'full_VAE.pth'
+VAE_PATH  = ROOT / 'state/full_VAE.pth'
 OUT_PATH  = HERE / 'vae_interp_samples.pt'
 
 
