@@ -33,10 +33,12 @@ if str(SRC) not in sys.path:
 from diffusion.mnist_cls_diff import UNET, DDPM_Scheduler, NUM_CLASSES, NULL_CLASS
 
 # %%
-CNN_CKPT = SRC / "mnist_models/is_digit_binary_classifier/cnn/best_cnn.pth"
+CNN_CKPT = HERE_STATE / "../mnist_models/is_digit_binary_classifier/cnn/best_cnn.pth"
 DISC_CKPT = HERE_STATE / "checkpoints/discriminators/discriminator_last.pth"
 GEN_CKPT = HERE_STATE / "checkpoints/generators/generator_last.pth"
-DIFF_CKPT = SRC / "diffusion/checkpoints/ddpm_class"
+# This reference doesn't exist (and didn't before my rearrangement) so I'll just leave it dangling
+# -John
+DIFF_CKPT = HERE_STATE / "../diffusion/checkpoints/ddpm_class"
 
 DEVICE = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 N_PER_SET = 1000
