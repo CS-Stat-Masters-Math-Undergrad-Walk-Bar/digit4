@@ -103,7 +103,7 @@ def train(epochs=10, use_mixup=True, device=None):
 
         torch.save(
             model.state_dict(),
-            HERE_STATE / ("state/mnist_mixup_classifier.pth" if use_mixup else "mnist_classifier.pth"),
+            HERE_STATE / ("mnist_mixup_classifier.pth" if use_mixup else "mnist_classifier.pth"),
         )
 
     return model, test_loader

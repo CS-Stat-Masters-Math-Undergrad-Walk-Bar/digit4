@@ -22,7 +22,7 @@ def build_classifier(device):
         nn.Softmax(dim=1)
     ).to(device)
     
-    state_dict = torch.load("/u/zup7mn/Classes/NN/digit4/state/mnist_classifier/mnist_mixup_classifier.pth", map_location=device)
+    state_dict = torch.load("/u/zup7mn/Classes/NN/digit4/state/mnist_models/digit_classifier/mnist_mixup_classifier.pth", map_location=device)
     classifier.load_state_dict(state_dict)
     classifier.eval()
     return classifier
