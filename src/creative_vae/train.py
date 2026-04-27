@@ -280,7 +280,7 @@ if __name__ == "__main__":
 
     digit_clf, value_clf = load_classifiers(
         value_path="src/mnist_classifier/best_model.pth",
-        digit_path="src/mnist_classifier/mnist_mixup_classifier.pth",
+        digit_path="state/mnist_classifier/mnist_mixup_classifier.pth",
         device=device,
     )
 

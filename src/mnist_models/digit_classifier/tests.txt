@@ -1,3 +1,3 @@
-Mixup classifier test accuracy: 0.9745  (9745/10000)/u/zup7mn/Classes/NN/digit4/src/mnist_classifier/mnist_mixup_classifier.pth
+Mixup classifier test accuracy: 0.9745  (9745/10000)/u/zup7mn/Classes/NN/digit4/state/mnist_classifier/mnist_mixup_classifier.pth
 
 
