@@ -17,3 +17,5 @@ src/diffusion/checkpoints/ddpm_class_emnist_digits.pt
 src/diffusion/v2_score/DeepCreativityScore.ipynb
 evaluation_presentation/compare_methods.ipynb
 .claude/
+venv
+*.swp
