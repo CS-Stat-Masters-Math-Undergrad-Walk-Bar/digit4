@@ -8,7 +8,6 @@ BASE_VAE_PATH = ROOT / 'state/VAE/full_VAE.pth'
 VAE_OUT_DIR = ROOT / 'output/VAE'
 VAE_INTERP_OUT = VAE_OUT_DIR / 'vae_interp_samples.pt'
 
-# TODO add this
 DIFF_CKPT_PATH = ROOT / 'state/diffusion/checkpoints/ddpm_class_emnist_digits.pt'
 DIFF_OUT_DIR = ROOT / 'output/diffusion/v3_score'
 
