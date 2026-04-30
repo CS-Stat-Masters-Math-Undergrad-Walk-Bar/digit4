@@ -18,8 +18,8 @@ VALUE_GAN_OUTPUT_DIR = ROOT / 'output/GAN/checkpoints'
 VALUE_CNN_BEST_PATH = ROOT / 'state/mnist_models/is_digit_binary_classifier/cnn/best_cnn.pth'
 VALUE_CNN_LAST_PATH = VALUE_CNN_BEST_PATH.parent / 'last_cnn.pth'
 
-NOVELTY_CNN_MIXUP = ROOT / 'state/digit_classifier/emnist_mixup_classifier.pth'
-NOVELTY_CNN_PLAIN = ROOT / 'state/digit_classifier/emnist_classifier.pth'
+NOVELTY_CNN_MIXUP = ROOT / 'state/mnist_models/digit_classifier/emnist_mixup_classifier.pth'
+NOVELTY_CNN_PLAIN = ROOT / 'state/mnist_models/digit_classifier/emnist_classifier.pth'
 
 CREATIVE_VAE_DIR = ROOT / 'state/VAE/creative'
 CREATIVE_VAE_OUT = VAE_OUT_DIR / 'creative_VAE_latent_optim.pt'
