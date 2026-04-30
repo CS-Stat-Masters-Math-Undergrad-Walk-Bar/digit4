@@ -54,26 +54,25 @@ Value answers the question: "how much does this look like a digit?" It is a meas
 
 ### Novelty
 Novelty tries to grasp how uncertain we are about which digit (2 or 6) this is. After a few tries, we settled on the formula:
-$$
-\text{Novelty}(p_2, p_6)=-\left(p_2\log_2\left(\frac{p_2}{p_2+p_6}\right)+p_6\log_2\left(\frac{p_6}{p_2+p_6}\right)\right)
-$$
+
+$$\text{Novelty}(p_2, p_6)=-\left(p_2\log_2\left(\frac{p_2}{p_2+p_6}\right)+p_6\log_2\left(\frac{p_6}{p_2+p_6}\right)\right)$$
+
 Note that this is equivalent to:
-$$
-\text{Novelty}(p_2, p_6) = H(\tilde{p}_2, \tilde{p}_6) (p_2 + p_6)\\\text{}\\
-H(\tilde{p}_2, \tilde{p}_6) = \frac{\tilde{p}_2\ln\tilde{p}_2 + \tilde{p}_6\ln\tilde{p}_6}{\ln 2}\\\text{}\\
-\tilde{p}_n=\frac{p_n}{p_2+p_6}
-$$
+
+$$\textrm{Novelty}(p_2, p_6) = H(\tilde{p}_2, \tilde{p}_6) (p_2 + p_6)$$\
+$$H(\tilde{p}_2, \tilde{p}_6) = -\frac{\tilde{p}_2\ln\tilde{p}_2 + \tilde{p}_6\ln\tilde{p}_6}{\ln 2}$$\
+$$\tilde{p}_n=\frac{p_n}{p_2+p_6}$$
+
 Where $p_2$ and $p_6$ are the probabilities that an image is a 2 or 6, respectively, based on the output of a pre-trained digit classifier. The classifier was trained on mixed-up images of 2 and 6, in various proportions.
 
 A plot of the novelty function is shown below. Note that the maximum occurs at $(0.5,0.5),$ the function appears convex, and all other points have smooth paths of gradient ascent to the maximum. If you'd like to explore this more, run `images/novelty.py` and play with the interactive 3D plot.
 ![Novelty function plot, showing maximum at (0.5, 0.5).](images/novelty.png)
 ### Surprise
 Surprise is meant to measure how strange a data point looks. We quantified this by using KL divergence to estimate how far off of the latent space's mean we are.
-$$
-S(x, z)=1-\exp\left(-\lambda\cdot D_{KL}\left(q_\phi(z|x)\Vert p(z)\right)\right)
-$$
+
+$$S(x, z)=1-\exp\left(-\lambda\cdot D_{KL}\left(q_\phi(z|x)\Vert p(z)\right)\right)$$
+
 ### Total Score
 The total score is the product of these three, to prevent the model from neglecting any of them:
-$$
-\text{Score} = V\cdot N\cdot S
-$$
+
+$$\text{Score} = V\cdot N\cdot S$$
