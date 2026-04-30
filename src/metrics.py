@@ -122,10 +122,10 @@ def log_creativity_score(
 ## then we do DC = v^v * n^n * s^s, DC is our score
 
 ## Model Paths
-## Discriminator:   src/GAN/checkpoints/discriminators/discriminator_last.pth
-## Is_digit: src/mnist_models/is_digit_binary_classifier/cnn/best_cnn.pth
-## Digit Classifier: src/mnist_models/digit_classifier/emnist_mixup_classifier.pth
-## VAE (for getting kl from the encoding): ../full_VAE.pth
+## Discriminator:   state/GAN/checkpoints/discriminators/discriminator_last.pth
+## Is_digit: state/mnist_models/is_digit_binary_classifier/cnn/best_cnn.pth
+## Digit Classifier: state/mnist_models/digit_classifier/emnist_mixup_classifier.pth
+## VAE (for getting kl from the encoding): state/VAE/full_VAE.pth
 
 
 class DeepCreativity(nn.Module):
