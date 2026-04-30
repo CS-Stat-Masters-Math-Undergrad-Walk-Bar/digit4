@@ -6,7 +6,6 @@ import torchvision
 from torchvision import transforms
 from PIL import Image
 import matplotlib.pyplot as plt
-from IPython.display import clear_output
 
 import os
 
@@ -122,7 +121,6 @@ for epoch in trange(EPOCHS, desc="Epochs"):
         generated_samples.append(torchvision.transforms.functional.to_pil_image(grid))
 
         ## show grid in notebook
-        clear_output(wait=True)
         plt.imshow(grid.permute(1, 2, 0))
         plt.show()
 
