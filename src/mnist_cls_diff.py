@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import torch.optim as optim
 import numpy as np
 
-from project_paths import DIFF_CKPT_PATH
+from config import DIFF_CKPT_PATH
 
 
 class SinusoidalEmbeddings(nn.Module):

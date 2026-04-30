@@ -2,7 +2,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = ROOT / 'data'
-CLASSIFIER_PATH = ROOT / 'state/diffusion/checkpoints/emnist_mixup_classifier.pth'
 
 BASE_VAE_PATH = ROOT / 'state/VAE/full_VAE.pth'
 VAE_OUT_DIR = ROOT / 'output/VAE'
@@ -21,3 +20,8 @@ VALUE_CNN_LAST_PATH = VALUE_CNN_BEST_PATH.parent / 'last_cnn.pth'
 
 NOVELTY_CNN_MIXUP = ROOT / 'state/digit_classifier/emnist_mixup_classifier.pth'
 NOVELTY_CNN_PLAIN = ROOT / 'state/digit_classifier/emnist_classifier.pth'
+
+CREATIVE_VAE_DIR = ROOT / 'state/VAE/creative'
+CREATIVE_VAE_OUT = VAE_OUT_DIR / 'creative_VAE_latent_optim.pt'
+LATENT_OPT_OUT = VAE_OUT_DIR / 'base_VAE_latent_optim.pt'
+

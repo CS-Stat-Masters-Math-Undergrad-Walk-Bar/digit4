@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torchvision.transforms import v2
 
-from project_paths import DATA_ROOT, NOVELTY_CNN_MIXUP, NOVELTY_CNN_PLAIN
+from config import DATA_ROOT, NOVELTY_CNN_MIXUP, NOVELTY_CNN_PLAIN
 
 BATCH_SIZE = 256
 

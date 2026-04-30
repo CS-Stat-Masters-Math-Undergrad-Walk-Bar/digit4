@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import torch.optim as optim
 import numpy as np
 
-from project_paths import DIFF_CKPT_PATH, DATA_ROOT
+from config import DIFF_CKPT_PATH, DATA_ROOT
 
 # EMNIST 'digits' split: 10 balanced classes (0-9), ~240k train / 40k test.
 EMNIST_SPLIT = 'digits'

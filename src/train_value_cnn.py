@@ -5,7 +5,7 @@ import torchvision
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from project_paths import DATA_ROOT, VALUE_CNN_BEST_PATH
+from config import DATA_ROOT, VALUE_CNN_BEST_PATH
 
 HERE = Path(__file__).resolve().parent
 

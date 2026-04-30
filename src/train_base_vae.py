@@ -8,7 +8,7 @@ from IPython.display import clear_output
 import io
 from PIL import Image
 
-from project_paths import DATA_ROOT, BASE_VAE_PATH
+from config import DATA_ROOT, BASE_VAE_PATH
 
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 print(f"Using {device} device")

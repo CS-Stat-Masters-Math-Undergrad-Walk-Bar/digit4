@@ -14,14 +14,14 @@ Collecting einops (from -r requirements.txt (line 1))
 ...
 ```
 You may notice that we have an empty folder, `data`. This is intended to be where `torch` will download the EMNIST dataset.
+
+Be aware, all the files were run on a cluster node with four GPUs, so you might need to adjust the CUDA device settings in each of the scripts before they'll run correctly.
 ## Generating Images
 We don't recommend that you do this unless you're willing to spend a few hours letting it run. We have pre-generated 10000 images with each method, which we've stored in the `output/` folder. We recommend skipping to [Scoring Images](#scoring-images) and continuing with those pretrained ones.
 ### VAE Interpolation
 Run `src/generate_vae_interp.py`.
-### VAE With Latent Optimization
-TODO
-### Creative VAE With Latent Optimization
-TODO
+### VAE With Latent Optimization and Creative VAE With Latent Optimization
+Run `src/creative_vae.ipynb`. Note that this requires the novelty CNN to be already trained.
 ### Diffusion
 Run `src/generate_diffusion.py`. Note that this requires both the diffusion model and the EMNIST classifer (for Value) to be trained. We've included pretrained models in the repo.
 ## Scoring Images
@@ -42,8 +42,8 @@ Surprise doesn't need an extra model trained; it uses the base VAE. If you haven
 Again, we don't recommend training these. But if you'd like to, feel free.
 ### VAE Interpolation
 Run `src/train_base_vae.py`.
-### VAE with Latent Optimization
-### Creative VAE With Latent Optimization
+### VAE with Latent Optimization Creative VAE With Latent Optimization
+This is performed within the `src/creative_vae.ipynb`.
 ### Diffusion
 We strongly recommend against training this one yourself, It took us 8 hours on 4xRTX4000. If you really want to, run `src/train_diffusion.py`.
 # Background
@@ -73,4 +73,7 @@ $$
 S(x, z)=1-\exp\left(-\lambda\cdot D_{KL}\left(q_\phi(z|x)\Vert p(z)\right)\right)
 $$
 ### Total Score
-TODO
+The total score is the product of these three, to prevent the model from neglecting any of them:
+$$
+\text{Score} = V\cdot N\cdot S
+$$

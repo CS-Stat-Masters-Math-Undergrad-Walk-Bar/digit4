@@ -6,7 +6,7 @@ import os
 from timm.utils.model_ema import ModelEmaV3
 
 from train_diffusion import UNET, DDPM_Scheduler, NUM_CLASSES, NULL_CLASS
-from project_paths import ROOT, CLASSIFIER_PATH, DIFF_CKPT_PATH, DIFF_OUT_DIR
+from config import ROOT, NOVELTY_CNN_MIXUP, DIFF_CKPT_PATH, DIFF_OUT_DIR
 
 # Compositional diffusion modes.
 # Each step we predict eps for c1=2, c2=6, and null. With deltas
@@ -38,7 +38,7 @@ def build_classifier(device):
         nn.Linear(64 * 676, 10),
         nn.Softmax(dim=1)
     ).to(device)
-    classifier.load_state_dict(torch.load(CLASSIFIER_PATH, map_location=device))
+    classifier.load_state_dict(torch.load(NOVELTY_CNN_MIXUP, map_location=device))
     classifier.eval()
     return classifier
 
