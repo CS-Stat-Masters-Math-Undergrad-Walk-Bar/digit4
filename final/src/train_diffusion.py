@@ -1,5 +1,6 @@
 # %%
 # Imports
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,8 +16,12 @@ import matplotlib.pyplot as plt
 import torch.optim as optim
 import numpy as np
 
-from project_paths import DIFF_CKPT_PATH
+from project_paths import DIFF_CKPT_PATH, DATA_ROOT
 
+# EMNIST 'digits' split: 10 balanced classes (0-9), ~240k train / 40k test.
+EMNIST_SPLIT = 'digits'
+NUM_CLASSES = 10
+NULL_CLASS = NUM_CLASSES  # index 10 = unconditional
 
 class SinusoidalEmbeddings(nn.Module):
     def __init__(self, time_steps:int, embed_dim: int):
@@ -73,10 +78,10 @@ class Attention(nn.Module):
 
 # %%
 class UnetLayer(nn.Module):
-    def __init__(self, 
-            upscale: bool, 
-            attention: bool, 
-            num_groups: int, 
+    def __init__(self,
+            upscale: bool,
+            attention: bool,
+            num_groups: int,
             dropout_prob: float,
             num_heads: int,
             C: int):
@@ -109,7 +114,7 @@ class UNET(nn.Module):
             input_channels: int = 1,
             output_channels: int = 1,
             time_steps: int = 1000,
-            num_classes: int = 10):
+            num_classes: int = NUM_CLASSES):
         super().__init__()
         self.num_layers = len(Channels)
         self.shallow_conv = nn.Conv2d(input_channels, Channels[0], kernel_size=3, padding=1)
@@ -169,14 +174,31 @@ def set_seed(seed: int = 42):
     random.seed(seed)
 
 # %%
-NUM_CLASSES = 10
-NULL_CLASS = NUM_CLASSES  # index 10 = unconditional
+# EMNIST images are stored transposed relative to MNIST; flip H/W so they look upright.
+_EMNIST_TRANSFORM = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Lambda(lambda x: torch.transpose(x, 1, 2)),
+    transforms.RandomAffine(
+        degrees=15,
+        translate=(0.1, 0.1),
+        scale=(0.9, 1.1),
+    )
+])
 
-def inference(checkpoint_path: str=None,
+def _gpu_config():
+    """Primary device + all visible GPU ids for DataParallel."""
+    n = torch.cuda.device_count()
+    if n == 0:
+        return torch.device('cpu'), None
+    gpu_ids = list(range(n))
+    return torch.device(f'cuda:{gpu_ids[0]}'), gpu_ids
+
+# %%
+def inference(checkpoint_path: str=CHECKPOINT_PATH,
               num_time_steps: int=1000,
               ema_decay: float=0.9999,
               guidance_scale: float=3.0):
-    device = torch.device('cuda:1')
+    device, _ = _gpu_config()
     checkpoint = torch.load(checkpoint_path, map_location=device)
     model = UNET(num_classes=NUM_CLASSES).to(device)
     model.load_state_dict(checkpoint['weights'])
@@ -226,14 +248,13 @@ def inference(checkpoint_path: str=None,
         temp = beta[0] / (torch.sqrt(1 - alpha[0]) * torch.sqrt(1 - beta[0]))
         x = (1 / torch.sqrt(1 - beta[0])) * z - temp * eps
 
-        # Display one image per class
         fig, axes = plt.subplots(1, NUM_CLASSES, figsize=(20, 2))
         for i, ax in enumerate(axes.flat):
             img = x[i].cpu().squeeze(0).numpy()
             ax.imshow(img, cmap='gray')
             ax.set_title(str(i))
             ax.axis('off')
-        plt.suptitle(f'CFG w={guidance_scale}')
+        plt.suptitle(f'EMNIST-{EMNIST_SPLIT} CFG w={guidance_scale}')
         plt.show()
 
 def train(batch_size: int=128,
@@ -246,24 +267,32 @@ def train(batch_size: int=128,
           p_uncond: float=0.1):
     set_seed(random.randint(0, 2**32-1)) if seed == -1 else set_seed(seed)
 
-    device = torch.device('cuda:1')
-    gpu_ids = [1, 2, 3]
+    device, gpu_ids = _gpu_config()
 
-    train_dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transforms.ToTensor())
+    train_dataset = datasets.EMNIST(
+        root=str(DATA_ROOT),
+        split=EMNIST_SPLIT,
+        train=True,
+        download=True,
+        transform=_EMNIST_TRANSFORM,
+    )
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=4)
 
     scheduler = DDPM_Scheduler(num_time_steps=num_time_steps)
     model = UNET(num_classes=NUM_CLASSES).to(device)
-    model = nn.DataParallel(model, device_ids=gpu_ids, output_device=device)
+    if gpu_ids is not None and len(gpu_ids) > 1:
+        model = nn.DataParallel(model, device_ids=gpu_ids, output_device=device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     ema = ModelEmaV3(model, decay=ema_decay)
     if checkpoint_path is not None:
         checkpoint = torch.load(checkpoint_path, map_location=device)
-        model.module.load_state_dict(checkpoint['weights'])
+        base = model.module if isinstance(model, nn.DataParallel) else model
+        base.load_state_dict(checkpoint['weights'])
         ema.load_state_dict(checkpoint['ema'])
         optimizer.load_state_dict(checkpoint['optimizer'])
     criterion = nn.MSELoss(reduction='mean')
 
+    dataset_size = len(train_dataset)
     for i in range(num_epochs):
         total_loss = 0
         for bidx, (x, y) in enumerate(tqdm(train_loader, desc=f"Epoch {i+1}/{num_epochs}")):
@@ -287,30 +316,21 @@ def train(batch_size: int=128,
             optimizer.step()
             ema.update(model)
 
+        base = model.module if isinstance(model, nn.DataParallel) else model
         checkpoint = {
-        'weights': model.module.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'ema': ema.state_dict()
+            'weights': base.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'ema': ema.state_dict()
         }
+        torch.save(checkpoint, CHECKPOINT_PATH)
 
-        torch.save(checkpoint, DIFF_CKPT_PATH)
-
-        # inference(checkpoint_path=CHECKPOINT_PATH)
-        print(f'Epoch {i+1} | Loss {total_loss / (60000/batch_size):.5f}')
+        print(f'Epoch {i+1} | Loss {total_loss / (dataset_size/batch_size):.5f}')
 
 # %%
 def main():
-    train(batch_size = 256, lr=2e-5, num_epochs=75)
-    inference(DIFF_CKPT_PATH, guidance_scale=3.0)
+    train(batch_size=512, lr=2e-5, num_epochs=100)
+    inference(CHECKPOINT_PATH, guidance_scale=3.0)
 
 if __name__ == '__main__':
     DIFF_CKPT_PATH.parent.mkdir(parents=True, exist_ok=True)
     main()
-
-# %%
-
-
-# %%
-
-
-
