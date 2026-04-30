@@ -29,14 +29,13 @@ BATCH_SIZE = 200         # ~5 GB peak per RTX 4000
 
 def build_classifier(device):
     classifier = nn.Sequential(
-        nn.Conv2d(1, 128, kernel_size=5, stride=1, padding=1),
+        nn.Conv2d(1, 256, kernel_size=5, stride=1, padding=1),
         nn.Dropout(0.2),
         nn.ReLU(),
-        nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1),
+        nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1),
         nn.Dropout(0.2),
         nn.Flatten(),
-        nn.Linear(64 * 676, 10),
-        nn.Softmax(dim=1)
+        nn.Linear(128 * 676, 10),
     ).to(device)
     classifier.load_state_dict(torch.load(NOVELTY_CNN_MIXUP, map_location=device))
     classifier.eval()
