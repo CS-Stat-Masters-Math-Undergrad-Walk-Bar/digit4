@@ -10,7 +10,7 @@ from IPython.display import clear_output
 
 import os
 
-from project_paths import VALUE_GAN_DISC_PATH, VALUE_GAN_GEN_PATH, VALUE_GAN_OUTPUT_DIR, DATA_ROOT
+from config import VALUE_GAN_DISC_PATH, VALUE_GAN_GEN_PATH, VALUE_GAN_OUTPUT_DIR, DATA_ROOT
 
 # %%
 

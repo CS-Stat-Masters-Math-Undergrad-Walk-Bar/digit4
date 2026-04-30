@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import torchvision
 
-from project_paths import BASE_VAE_PATH, DATA_ROOT, VAE_INTERP_OUT
+from config import BASE_VAE_PATH, DATA_ROOT, VAE_INTERP_OUT
 
 N_SAMPLES = 10000
 BATCH_SIZE = 500

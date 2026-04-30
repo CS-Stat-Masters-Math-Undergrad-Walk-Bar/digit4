@@ -8,7 +8,7 @@ import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 
-from project_paths import ROOT, VALUE_GAN_DISC_PATH, BASE_VAE_PATH, VALUE_CNN_BEST_PATH, NOVELTY_CNN_MIXUP, VAE_INTERP_OUT, DIFF_OUT_DIR
+from config import ROOT, VALUE_GAN_DISC_PATH, BASE_VAE_PATH, VALUE_CNN_BEST_PATH, NOVELTY_CNN_MIXUP, VAE_INTERP_OUT, DIFF_OUT_DIR, CREATIVE_VAE_OUT, LATENT_OPT_OUT
 from metrics import DeepCreativity
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -126,8 +126,8 @@ print('models loaded; scorer uses GAN discriminator')
 samples_unfilt = {
     'vae_interp':       VAE_INTERP_OUT,
     'diffusion_avg':    DIFF_OUT_DIR / 'generated_compose_average.pt',
-    'base_vae_latent_optim': ROOT / "output/VAE/base_VAE_latent_optim.pt",
-    'creative_vae_latent_optim': ROOT / "output/VAE/creative_VAE_latent_optim.pt",
+    'base_vae_latent_optim': LATENT_OPT_OUT,
+    'creative_vae_latent_optim': CREATIVE_VAE_OUT,
 }
 
 # Skip any method whose file is not yet on disk so the notebook stays runnable mid-pipeline
