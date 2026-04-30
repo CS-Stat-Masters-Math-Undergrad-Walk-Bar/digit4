@@ -58,7 +58,7 @@ def load_diffusion_model(device):
     return ema.module.eval()
 
 
-def compose_eps(model, z, t_tensor, c1_cls, c2_cls, null_cls, mode, guidance_scale):
+def create_eps(model, z, t_tensor, c1_cls, c2_cls, null_cls, guidance_scale):
     z3 = torch.cat([z, z, z])
     t3 = torch.cat([t_tensor, t_tensor, t_tensor])
     c3 = torch.cat([c1_cls, c2_cls, null_cls])
@@ -69,12 +69,7 @@ def compose_eps(model, z, t_tensor, c1_cls, c2_cls, null_cls, mode, guidance_sca
     d1 = eps_c1 - eps_uncond
     d2 = eps_c2 - eps_uncond
 
-    if mode == 'average':
-        return eps_uncond + guidance_scale * 0.5 * (d1 + d2)
-    elif mode == 'product':
-        return eps_uncond + guidance_scale * (d1 + d2)
-    else:
-        raise ValueError(f"unknown mode: {mode}")
+    eps_uncond + guidance_scale * 0.5 * (d1 + d2)
 
 
 def generate(model, classifier, beta, alpha, mode, n_samples, batch_size,
@@ -95,15 +90,14 @@ def generate(model, classifier, beta, alpha, mode, n_samples, batch_size,
 
             for t in reversed(range(1, num_time_steps)):
                 t_tensor = torch.full((bs,), t, device=device)
-                eps = compose_eps(model, z, t_tensor, c1_cls, c2_cls, null_cls,
-                                  mode, guidance_scale)
+                eps = create_eps(model, z, t_tensor, c1_cls, c2_cls, null_cls, guidance_scale)
                 temp = beta[t] / (torch.sqrt(1 - alpha[t]) * torch.sqrt(1 - beta[t]))
                 z = (1 / torch.sqrt(1 - beta[t])) * z - temp * eps
                 z = z + torch.randn_like(z) * torch.sqrt(beta[t])
 
             t_tensor = torch.zeros(bs, dtype=torch.long, device=device)
-            eps = compose_eps(model, z, t_tensor, c1_cls, c2_cls, null_cls,
-                              mode, guidance_scale)
+            eps = create_eps(model, z, t_tensor, c1_cls, c2_cls, null_cls,
+                            guidance_scale)
             temp = beta[0] / (torch.sqrt(1 - alpha[0]) * torch.sqrt(1 - beta[0]))
             x = (1 / torch.sqrt(1 - beta[0])) * z - temp * eps
             x = x[:, :, 2:30, 2:30]
