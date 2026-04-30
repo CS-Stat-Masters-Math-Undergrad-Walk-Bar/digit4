@@ -194,7 +194,7 @@ def _gpu_config():
     return torch.device(f'cuda:{gpu_ids[0]}'), gpu_ids
 
 # %%
-def inference(checkpoint_path: str=CHECKPOINT_PATH,
+def inference(checkpoint_path: Path=DIFF_CKPT_PATH,
               num_time_steps: int=1000,
               ema_decay: float=0.9999,
               guidance_scale: float=3.0):
@@ -322,14 +322,14 @@ def train(batch_size: int=128,
             'optimizer': optimizer.state_dict(),
             'ema': ema.state_dict()
         }
-        torch.save(checkpoint, CHECKPOINT_PATH)
+        torch.save(checkpoint, DIFF_CKPT_PATH)
 
         print(f'Epoch {i+1} | Loss {total_loss / (dataset_size/batch_size):.5f}')
 
 # %%
 def main():
     train(batch_size=512, lr=2e-5, num_epochs=100)
-    inference(CHECKPOINT_PATH, guidance_scale=3.0)
+    inference(DIFF_CKPT_PATH, guidance_scale=3.0)
 
 if __name__ == '__main__':
     DIFF_CKPT_PATH.parent.mkdir(parents=True, exist_ok=True)

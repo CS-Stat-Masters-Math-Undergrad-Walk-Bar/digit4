@@ -23,7 +23,7 @@ Run `src/generate_vae_interp.py`.
 ### VAE With Latent Optimization and Creative VAE With Latent Optimization
 Run `src/creative_vae.ipynb`. Note that this requires the novelty CNN to be already trained.
 ### Diffusion
-Run `src/generate_diffusion.py`. Note that this requires both the diffusion model and the EMNIST classifer (for Value) to be trained. We've included pretrained models in the repo.
+Run `src/generate_diffusion.py`. Note that this requires both the diffusion model and the EMNIST classifer (for Value) to be trained. It also must be run on GPUs. We've included pretrained models in the repo.
 ## Scoring Images
 To score the pre-generated images, run `src/compare_methods.py`. It will display some figures interactively, showing random selections from each image set, along with the top-scoring ones. It will also save these images (along with all the scores) in the `analysis/` folder.
 

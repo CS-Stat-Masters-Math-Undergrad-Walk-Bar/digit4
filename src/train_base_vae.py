@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
-from IPython.display import clear_output
 import io
 from PIL import Image
 
@@ -156,9 +155,6 @@ for epoch in range(EPOCHS):
         test_loss /= len(test_loader)
 
         test_losses.append(test_loss)
-
-        # clear previous output
-        clear_output(wait=True)
 
         print(f"Epoch {epoch+1}/{EPOCHS}")
         print(f"Test Error: \n Avg loss: {test_loss:>8f}")
