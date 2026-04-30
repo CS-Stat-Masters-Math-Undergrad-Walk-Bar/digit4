@@ -5,8 +5,8 @@ import sys
 import os
 from timm.utils.model_ema import ModelEmaV3
 
-from mnist_cls_diff import UNET, DDPM_Scheduler, NUM_CLASSES, NULL_CLASS
-from project_paths import ROOT, CLASSIFIER_PATH, CKPT_PATH, OUT_DIR
+from train_diffusion import UNET, DDPM_Scheduler, NUM_CLASSES, NULL_CLASS
+from project_paths import ROOT, CLASSIFIER_PATH, DIFF_CKPT_PATH, DIFF_OUT_DIR
 
 # Compositional diffusion modes.
 # Each step we predict eps for c1=2, c2=6, and null. With deltas
@@ -44,7 +44,7 @@ def build_classifier(device):
 
 
 def load_diffusion_model(device):
-    checkpoint = torch.load(CKPT_PATH, map_location=device)
+    checkpoint = torch.load(DIFF_CKPT_PATH, map_location=device)
     model = UNET(num_classes=NUM_CLASSES).to(device)
     if 'weights' in checkpoint:
         sd = {k.replace('module.', ''): v for k, v in checkpoint['weights'].items()}
@@ -169,7 +169,7 @@ def merge_shards(mode, world_size, shard_dir, out_dir):
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)
     world_size = len(GPU_IDS)
-    shard_dir = OUT_DIR / 'shards'
+    shard_dir = DIFF_OUT_DIR / 'shards'
     os.makedirs(shard_dir, exist_ok=True)
 
     for mode in MODES:
@@ -177,7 +177,7 @@ if __name__ == '__main__':
         mp.spawn(worker,
                  args=(world_size, mode, N_SAMPLES, BATCH_SIZE, GPU_IDS, shard_dir),
                  nprocs=world_size, join=True)
-        merge_shards(mode, world_size, shard_dir, OUT_DIR)
+        merge_shards(mode, world_size, shard_dir, DIFF_OUT_DIR)
 
     try:
         os.rmdir(shard_dir)

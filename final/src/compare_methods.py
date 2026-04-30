@@ -8,7 +8,7 @@ import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 
-from project_paths import ROOT
+from project_paths import ROOT, VALUE_GAN_DISC_PATH, BASE_VAE_PATH, VALUE_CNN_BEST_PATH, NOVELTY_CNN_MIXUP, VAE_INTERP_OUT, DIFF_OUT_DIR
 from metrics import DeepCreativity
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -92,22 +92,20 @@ def build_discriminator():
 
 # %%
 vae = VAE(Encoder(28 * 28, 300, 10), Decoder(10, 300, 28 * 28)).to(device)
-vae.load_state_dict(torch.load(ROOT / 'state/VAE/full_VAE.pth', map_location=device))
+vae.load_state_dict(torch.load(BASE_VAE_PATH, map_location=device))
 vae.eval()
 
 is_digit = build_is_digit().to(device)
-is_digit.load_state_dict(torch.load(
-    ROOT / 'state/mnist_models/is_digit_binary_classifier/cnn/best_cnn.pth', map_location=device))
+is_digit.load_state_dict(torch.load(VALUE_CNN_BEST_PATH, map_location=device))
 is_digit.eval()
 
 digit_clf = build_digit_classifier().to(device)
-digit_clf.load_state_dict(torch.load(
-    ROOT / 'state/mnist_models/digit_classifier/emnist_mixup_classifier.pth', map_location=device))
+digit_clf.load_state_dict(torch.load(NOVELTY_CNN_MIXUP, map_location=device))
 digit_clf.eval()
 
 disc = build_discriminator().to(device)
 disc.load_state_dict(torch.load(
-    ROOT / 'state/GAN/checkpoints/discriminators/discriminator_last.pth', map_location=device))
+    VALUE_GAN_DISC_PATH, map_location=device))
 disc.eval()
 
 scorer = DeepCreativity(
@@ -126,8 +124,8 @@ print('models loaded; scorer uses GAN discriminator')
 
 # %%
 samples_unfilt = {
-    'vae_interp':       ROOT / 'output/VAE/vae_interp_samples.pt',
-    'diffusion_avg':    ROOT / 'output/diffusion/v3_score/generated_compose_average.pt',
+    'vae_interp':       VAE_INTERP_OUT,
+    'diffusion_avg':    DIFF_OUT_DIR / 'generated_compose_average.pt',
     'base_vae_latent_optim': ROOT / "output/VAE/base_VAE_latent_optim.pt",
     'creative_vae_latent_optim': ROOT / "output/VAE/creative_VAE_latent_optim.pt",
 }
