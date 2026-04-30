@@ -3,7 +3,6 @@ mnist_classifier/data
 .DS_Store
 __pycache__
 docs/
-data/
 # checkpoints/
 *.png
 .vscode/
