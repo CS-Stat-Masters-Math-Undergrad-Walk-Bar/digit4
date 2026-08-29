@@ -5,6 +5,7 @@ __pycache__
 docs/
 # checkpoints/
 *.png
+generated_images/
 .vscode/
 wandb/
 .pth

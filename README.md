@@ -1,4 +1,7 @@
+![readme_thumbnail](images/readme_thumbnail.png)
+
 # Digit4
+
 In this project, we create a generative model to create digits that are neither 2 nor 6, but something in between. We also want the digits to look creative, and have a tradeoff between creativity and accuracy. [Here](NN_Final_Presentation.pdf) is a presentation going through the metric design, modelling, and results.
 
 ## Setup
